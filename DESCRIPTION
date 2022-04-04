@@ -1,0 +1,14 @@
+Package: oxyQ
+Title: QUALITY CHECKING SAMPLE DATA FOR OXYGENATION PLANT MONITORING.
+Version: 0.0.0.9000
+Authors@R: 
+    person("Bart", "Huntley", , "Bart.Huntley@DBCA.wa.gov.au", role = c("aut", "cre"),
+           comment = c(ORCID = "0000-0002-9519-4105"))
+Description: This package contains a collection of functions to aid quality assessment 
+    of raw sonde data. It does this by quality flagging measurements by way of  
+    predetermined 'rules'. The package may expand to include additional functions 
+    to aid in the assessment of oxygenation plant function.
+License: `use_mit_license()`
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.1.2
