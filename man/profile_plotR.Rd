@@ -19,3 +19,6 @@ temperature and density (UNESCO formula).
 \description{
 Constructs profile plots for salinity, temperature and density.
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

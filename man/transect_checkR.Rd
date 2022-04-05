@@ -17,3 +17,6 @@ located in appropriate transect or sample has been named incorrectly.
 \description{
 Checks named samples are from expected transects and if named correctly.
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

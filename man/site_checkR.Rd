@@ -17,3 +17,6 @@ sample and/or 10 added for a duplicate.
 \description{
 Checks site samples for correct sequence and duplicate depth measurements.
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

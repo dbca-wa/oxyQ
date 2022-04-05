@@ -15,3 +15,6 @@ A tibble of the raw data with a \code{QUAL} variable set to 10000.
 \description{
 Import raw csv data from sonde
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

@@ -37,3 +37,6 @@ output in png format. All outputs are written to the working directory.
 flagR("./my_raw_sonde_data.csv")
 }
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

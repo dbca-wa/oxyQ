@@ -15,3 +15,6 @@ A more human friendly plot title.
 \description{
 Helper function to reformat a file name.
 }
+\author{
+Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
+}

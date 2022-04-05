@@ -25,6 +25,8 @@
 #' @import readr
 #' @import sf
 #'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
+#'
 #' @export
 #'
 #' @examples
@@ -66,6 +68,7 @@ flagR <- function(file){
 #'
 #' @return A tibble of the raw data with a `QUAL` variable set to 10000.
 #'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
 #'
 #' @importFrom  readr read_csv locale
 #' @importFrom janitor clean_names
@@ -125,6 +128,8 @@ old_data_updatR <- function(x){
 #'
 #' @return A more human friendly plot title.
 #'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
+#'
 #' @importFrom lubridate as_date
 #' @importFrom stringr str_split
 #' @importFrom tools file_path_sans_ext
@@ -162,6 +167,8 @@ depth_checkR <- function(x){
 #' @return A tibble where `QUAL` variable has 100 added for an out of sequence
 #'       sample and/or 10 added for a duplicate.
 #'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
+#'
 #' @import dplyr
 site_checkR <- function(x){
   out <- dplyr::tibble()
@@ -195,6 +202,8 @@ site_checkR <- function(x){
 #'
 #' @return A tibble where `QUAL` variable has 1 added for any sample not spatially
 #'       located in appropriate transect or sample has been named incorrectly.
+#'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
 #'
 #' @import sf
 #' @import dplyr
@@ -232,6 +241,8 @@ transect_checkR <- function(x){
 #'
 #' @return Three individual profile plots, facetted by transect, for salinity,
 #'       temperature and density (UNESCO formula).
+#'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
 #'
 #' @import dplyr
 #' @import ggplot2
