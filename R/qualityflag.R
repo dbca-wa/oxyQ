@@ -70,7 +70,7 @@ flagR <- function(file){
 #'
 #' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
 #'
-#' @importFrom  readr read_csv locale
+#' @import readr
 #' @importFrom janitor clean_names
 #' @importFrom mgsub mgsub
 #' @import sf
@@ -109,7 +109,7 @@ imp_raw_csv <- function(file){
 #'
 #' @return A tibble with site names in current format
 #'
-#' @importFrom dplyr mutate
+#' @import dplyr
 old_data_updatR <- function(x){
   x <- x %>%
     dplyr::mutate(site = ifelse(grepl("c0", site),
