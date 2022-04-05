@@ -7,7 +7,7 @@
 flagR(file)
 }
 \arguments{
-\item{file}{A character string of full file path to raw csv data.}
+\item{file}{A character string representing the full file path to raw csv data.}
 }
 \value{
 A csv of the original data with quality issues flagged, a shape file
@@ -15,12 +15,14 @@ of the same and salinity, temperature and density profile plots.
 }
 \description{
 \code{flagR} assesses the raw field sample data from a sonde and flags with a
-numerical code any suspect samples in an output csv. Suspect issues are:
+numerical code any suspect samples in an output csv. OK data has a \code{QUAL}
+code value of 10000. Quality issues are represented by codes that are
+added to this value. Quality issues are:
 \itemize{
 \item Sample stability check (depth/Vpos +/-10\% variation) - \code{QUAL}
 code 01000
-\item Sample site check for out of sequence or duplicate (within 0.1m)
-records - \code{QUAL} codes 00100 and 00010
+\item Sample site check for out of sequence record - \code{QUAL} code 00100
+\item Sample site check for duplicate record (within 0.1m) - \code{QUAL} code 00010
 \item Transect check for expected and or incorrectly named samples
 - \code{QUAL} cade 00001 }
 }
