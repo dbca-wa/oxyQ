@@ -156,12 +156,11 @@ plot_nameR <- function(file){
 #' @import dplyr
 depth_checkR <- function(x){
   out <- x %>%
-    dplyr::mutate(percentage = round(((DEPTH_m - VPOS_m) / VPOS_m * 100), 2),
-                  ratio = round((DEPTH_m / VPOS_m), 2),
+    dplyr::mutate(dif = round((DEPTH_m - VPOS_m), 2),
                   QUAL = case_when(
-                    abs(percentage) >= 10  ~ QUAL + 1000,
+                    abs(dif) >= 0.2  ~ QUAL + 1000,
                     TRUE ~ QUAL)) %>%
-    dplyr::select(-ratio, -percentage)
+    dplyr::select(-dif)
   return(out)
 }
 
