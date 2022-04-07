@@ -15,7 +15,7 @@ knitr::opts_chunk$set(
 ```
 
 ## Weclome to oxyQ!
-The purpose of `oxyQ` is to aid in quality checking raw sonde monitoring data and 
+The purpose of `oxyQ` is to aid in quality checking raw sonde sampling data and 
 to provide helpful functions for the monitoring of oxygenation plants.
 
 The easiest way to interact with the `oxyQ` package is to work within an RStudio 
