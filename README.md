@@ -23,7 +23,7 @@ plants.
 ## Installation
 
 You can install the development version of oxyQ from
-[GitHub](https://github.com/) with:
+[GitHub](https://github.com/dbca-wa) with:
 
 ``` r
 # install.packages("devtools")

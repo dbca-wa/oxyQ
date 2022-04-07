@@ -33,7 +33,7 @@ to provide helpful functions for the monitoring of oxygenation plants.
 
 ## Installation
 
-You can install the development version of oxyQ from [GitHub](https://github.com/) with:
+You can install the development version of oxyQ from [GitHub](https://github.com/dbca-wa) with:
 
 ``` r
 # install.packages("devtools")
