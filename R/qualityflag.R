@@ -36,10 +36,12 @@
 #' flagR("./my_raw_sonde_data.csv")
 #' }
 flagR <- function(file){
+
   x <- imp_raw_csv(file)
 
   x <- old_data_updatR(x)
 
+  cat("Performing quality checks...\n")
   x <- depth_checkR(x)
 
   x <- site_checkR(x)
@@ -60,8 +62,9 @@ flagR <- function(file){
 
   # write shape file
   x %>%
+    dplyr::mutate(time = as.character(time)) %>%
     sf::st_as_sf(coords = c("easting_m", "northing_m"), crs = 28350) %>%
-    sf::st_write(dsn = shp_fp)
+    sf::st_write(dsn = shp_fp, quiet = TRUE)
 }
 
 #' Import raw csv data from sonde
@@ -81,7 +84,8 @@ imp_raw_csv <- function(file){
   # dlist <- vector(mode = "list", length = length(file))
   for(i in seq_along(file)){
     f <- file[i]
-    d <- readr::read_csv(f, locale = readr::locale(encoding="latin1")) %>%
+    d <- readr::read_csv(f, locale = readr::locale(encoding="latin1"),
+                         show_col_types = FALSE) %>%
       janitor::clean_names()
     # function to split on last '_' in col names and junk sonde id
     fn <- function(x){strsplit(x, "_(?!.*_)", perl=TRUE)[[1]]}
@@ -262,7 +266,7 @@ profile_plotR <- function(x, file){
   grp_facet <- facet_df %>%
     dplyr::left_join(unique(facet_df) %>%
                        dplyr::group_by(tsect) %>%
-                       dplyr::mutate(off = 0:(n()-1))) %>%
+                       dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
     dplyr::select(-tsect)
 
   if(stringr::str_detect(x[["site"]][1], pattern = "c")){
@@ -348,6 +352,7 @@ profile_plotR <- function(x, file){
          subtitle = expression(Offset~"0.3"*kg*"/"*m^3),
          y = "Depth (m)",
          x = expression(Density~"("*kg*"/"*m^3*")")) +
+    lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
 
@@ -360,6 +365,7 @@ profile_plotR <- function(x, file){
          subtitle = expression(Offset~"0.2"*degree*C),
          y = "Depth (m)",
          x = expression(Temperature~"("*degree*C*")")) +
+    lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
 
@@ -372,12 +378,13 @@ profile_plotR <- function(x, file){
          subtitle = "Offset 0.3ppt",
          y = "Depth (m)",
          x = "Salinity (ppt)") +
+    lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
 
-  ggsave(d_plot, file = paste0("./", fname, "_density_profile_profile.png"))
-  ggsave(c_plot, file = paste0("./", fname, "_temperature_profile.png"))
-  ggsave(s_plot, file = paste0("./", fname, "_salinity_profile.png"))
+  suppressMessages(ggsave(d_plot, file = paste0("./", fname, "_density_profile.png")))
+  suppressMessages(ggsave(c_plot, file = paste0("./", fname, "_temperature_profile.png")))
+  suppressMessages(ggsave(s_plot, file = paste0("./", fname, "_salinity_profile.png")))
 }
 
 
