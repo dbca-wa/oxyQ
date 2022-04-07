@@ -27,7 +27,7 @@ You can install the development version of oxyQ from
 
 ``` r
 # install.packages("devtools")
-devtools::install_github("Bartesto/oxyQ", build_vignettes = TRUE)
+devtools::install_github("dbca-wa/oxyQ", build_vignettes = TRUE)
 ```
 
 Be sure to check out the package vignette for how to get started.
