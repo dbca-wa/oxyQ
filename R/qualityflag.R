@@ -263,7 +263,7 @@ transect_checkR <- function(x){
 #' }
 profile_plotR <- function(file){
 
-  x <- readr::read_csv(file)
+  x <- readr::read_csv(file, show_col_types = FALSE)
 
   tname <- plot_nameR(file = file)
   fname <- tools::file_path_sans_ext(basename(file))
