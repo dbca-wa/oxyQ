@@ -4,20 +4,32 @@
 \alias{profile_plotR}
 \title{Constructs profile plots for salinity, temperature and density.}
 \usage{
-profile_plotR(x, file)
+profile_plotR(file, rerun = FALSE, ...)
 }
 \arguments{
-\item{x}{A tibble as exported from either \code{\link{imp_raw_csv}}
-or \code{\link{old_data_updatR}}}
+\item{file}{A character string. Full file path to raw csv data. If rerun is TRUE
+full file path to quality flagged data required.}
 
-\item{file}{A character string of full file path to raw csv data.}
+\item{rerun}{Boolean default FALSE. If TRUE will make profile plots for reviewed
+data. See file parameter.}
+
+\item{...}{Further arguments only used when run internally in \code{flagR}.}
 }
 \value{
 Three individual profile plots, facetted by transect, for salinity,
 temperature and density (UNESCO formula).
 }
 \description{
-Constructs profile plots for salinity, temperature and density.
+\code{profile_plotR} creates salinity, temperature and density profile plots.
+It is used internally in the \code{flagR} function for the initial plots of
+the raw sample data. It can also be called on user edited quality flagged
+csv inputs and each iteration will retain the input 'R' value in the plot
+file name.
+}
+\examples{
+\dontrun{
+profile_plotR("./my_raw_sonde_data.csv")
+}
 }
 \author{
 Bart Huntley, \email{bart.huntley@dbca.wa.gov.au}
