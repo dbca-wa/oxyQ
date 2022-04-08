@@ -19,7 +19,7 @@ numerical code any suspect samples in an output csv. OK data has a \code{QUAL}
 code value of 10000. Quality issues are represented by codes that are
 added to this value. Quality issues are:
 \itemize{
-\item Sample stability check (depth/Vpos +/-10\% variation) - \code{QUAL}
+\item Sample stability check (depth/Vpos +/- 0.2m variation) - \code{QUAL}
 code 01000
 \item Sample site check for out of sequence record - \code{QUAL} code 00100
 \item Sample site check for duplicate record (within 0.1m) - \code{QUAL} code 00010
