@@ -48,7 +48,7 @@ flagR <- function(file){
 
   x <- transect_checkR(x)
 
-  profile_plotR(file, rerun = FALSE, x)
+  plotR(x, file)
 
   stub <- basename(file) %>%
     gsub(pattern = ".csv", replacement = "_R1.csv", file)
@@ -241,18 +241,10 @@ transect_checkR <- function(x){
 #' Constructs profile plots for salinity, temperature and density.
 #'
 #' \code{profile_plotR} creates salinity, temperature and density profile plots.
-#'       It is used internally in the `flagR` function for the initial plots of
-#'       the raw sample data. It can also be called on user edited quality flagged
-#'       csv inputs and each iteration will retain the input 'R' value in the plot
-#'       file name.
+#'       It is used only on user edited quality flagged csv inputs and each
+#'       iteration will retain the input 'R' value in the plot file name.
 #'
-#' @param file A character string. Full file path to raw csv data. If rerun is TRUE
-#'       full file path to quality flagged data required.
-#'
-#' @param rerun Boolean default FALSE. If TRUE will make profile plots for reviewed
-#'       data. See file parameter.
-#'
-#' @param ... Further arguments only used when run internally in `flagR`.
+#' @param file A character string. Full file path to raw csv data.
 #'
 #' @return Three individual profile plots, facetted by transect, for salinity,
 #'       temperature and density (UNESCO formula).
@@ -269,26 +261,12 @@ transect_checkR <- function(x){
 #' \dontrun{
 #' profile_plotR("./my_raw_sonde_data.csv")
 #' }
-profile_plotR <- function(file, rerun = FALSE, ...){
+profile_plotR <- function(file){
 
-  fname <- tools::file_path_sans_ext(basename(file))
-  isR <- length(str_split(fname, "_")[[1]])
-
-  # are the inputs correct
-  if(rerun == FALSE & isR > 2){
-    stop("Is provided file correct for initial profile plotting?")
-  } else {
-    if(rerun == TRUE & isR < 3){
-      stop("Is provided file correct for rerun profile plotting?")
-    } else {
-      print("Inputs are all good...")
-    }
-  }
-
-
-  if(rerun == TRUE){x <- readr::read_csv(file)}
+  x <- readr::read_csv(file)
 
   tname <- plot_nameR(file = file)
+  fname <- tools::file_path_sans_ext(basename(file))
 
 
   facet_df <- dplyr::tibble(site = as.factor(x[["site"]]),
@@ -421,3 +399,151 @@ profile_plotR <- function(file, rerun = FALSE, ...){
 }
 
 
+
+
+#' Internal profile plot creator
+#'
+#' @param file
+#'
+#' @return Three individual profile plots, facetted by transect, for salinity,
+#'       temperature and density (UNESCO formula).
+#'
+#' @author Bart Huntley, \email{bart.huntley@@dbca.wa.gov.au}
+#'
+#' @import dplyr
+#' @import ggplot2
+#' @importFrom stringr str_detect
+plotR <- function(x, file){
+
+  tname <- plot_nameR(file = file)
+  fname <- tools::file_path_sans_ext(basename(file))
+
+
+  facet_df <- dplyr::tibble(site = as.factor(x[["site"]]),
+                            tsect = substr(site, 1, 3)) %>%
+    unique() %>%
+    dplyr::arrange(site)
+
+  grp_facet <- facet_df %>%
+    dplyr::left_join(unique(facet_df) %>%
+                       dplyr::group_by(tsect) %>%
+                       dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
+    dplyr::select(-tsect)
+
+  if(stringr::str_detect(x[["site"]][1], pattern = "c")){
+    # caversham
+    dat <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(site)) %>%
+      dplyr::arrange(site) %>%
+      dplyr::mutate(p = 1 + (DEPTH_m * 0.1),
+                    depth = -DEPTH_m,
+                    dens = marelac::sw_dens(S = SAL_psu, t = T_degC, p = p,
+                                            method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(offD = off * 0.3,
+                    offC = off * 0.2,
+                    offS = off * 0.3,
+                    densP = round(dens + offD, 2),
+                    cP = round(T_degC + offC, 2),
+                    salP = round(SAL_psu + offS, 2),
+                    fac_grp = factor(substr(toupper(site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3"))) %>%
+      dplyr::arrange(site, depth)
+
+    depth <- c(0, dat[["DEPTH_m"]])
+
+    # find index of deepest sites
+    ind <- c(0, which(diff(depth)>0))
+
+    lab_df <- dat %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = depth - 0.1,
+                    fac_grp = factor(substr(toupper(site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3")),
+                    site = toupper(site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(site)
+  } else {
+    # guildford
+    dat <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(site)) %>%
+      dplyr::arrange(site) %>%
+      dplyr:: mutate(p = 1 + (DEPTH_m * 0.1),
+                     depth = -DEPTH_m,
+                     dens = marelac::sw_dens(S = SAL_psu, t = T_degC, p = p,
+                                             method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(offD = off * 0.3,
+                    offC = off * 0.2,
+                    offS = off * 0.3,
+                    densP = round(dens + offD, 2),
+                    cP = round(T_degC + offC, 2),
+                    salP = round(SAL_psu + offS, 2),
+                    fac_grp = factor(substr(toupper(site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3"))) %>%
+      dplyr::arrange(site, depth)
+
+    depth <- c(0, dat[["DEPTH_m"]])
+
+    # find index of deepest sites
+    ind <- c(0, which(diff(depth)>0))
+
+    lab_df <- dat %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = depth - 0.1,
+                    fac_grp = factor(substr(toupper(site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3")),
+                    site = toupper(site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(site)
+  }
+
+  d_plot <- ggplot(dat, aes(x = densP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    facet_grid(rows = vars(fac_grp)) +
+    geom_text(data = lab_df, aes(label = site, x = densP, y = y)) +
+    labs(title = tname,
+         subtitle = expression(Offset~"0.3"*kg*"/"*m^3),
+         y = "Depth (m)",
+         x = expression(Density~"("*kg*"/"*m^3*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+
+  c_plot <- ggplot(dat, aes(x = cP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    facet_grid(rows = vars(fac_grp)) +
+    geom_text(data = lab_df, aes(label = site, x = cP, y = y)) +
+    labs(title = tname,
+         subtitle = expression(Offset~"0.2"*degree*C),
+         y = "Depth (m)",
+         x = expression(Temperature~"("*degree*C*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+
+  s_plot <- ggplot(dat, aes(x = salP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    facet_grid(rows = vars(fac_grp)) +
+    geom_text(data = lab_df, aes(label = site, x = salP, y = y)) +
+    labs(title = tname,
+         subtitle = "Offset 0.3ppt",
+         y = "Depth (m)",
+         x = "Salinity (ppt)") +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+
+  suppressMessages(ggsave(d_plot, file = paste0("./", fname, "_density_profile.png")))
+  suppressMessages(ggsave(c_plot, file = paste0("./", fname, "_temperature_profile.png")))
+  suppressMessages(ggsave(s_plot, file = paste0("./", fname, "_salinity_profile.png")))
+}
