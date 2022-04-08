@@ -5,7 +5,7 @@
 #'       code value of 10000. Quality issues are represented by codes that are
 #'       added to this value. Quality issues are:
 #'       \itemize{
-#'         \item Sample stability check (depth/Vpos +/-10% variation) - `QUAL`
+#'         \item Sample stability check (depth/Vpos +/- 0.2m variation) - `QUAL`
 #'         code 01000
 #'         \item Sample site check for out of sequence record - `QUAL` code 00100
 #'         \item Sample site check for duplicate record (within 0.1m) - `QUAL` code 00010
@@ -48,7 +48,7 @@ flagR <- function(file){
 
   x <- transect_checkR(x)
 
-  profile_plotR(x, file)
+  profile_plotR(file, rerun = FALSE, x)
 
   stub <- basename(file) %>%
     gsub(pattern = ".csv", replacement = "_R1.csv", file)
@@ -240,9 +240,19 @@ transect_checkR <- function(x){
 
 #' Constructs profile plots for salinity, temperature and density.
 #'
-#' @param x A tibble as exported from either \code{\link{imp_raw_csv}}
-#'       or \code{\link{old_data_updatR}}
-#' @param file A character string of full file path to raw csv data.
+#' \code{profile_plotR} creates salinity, temperature and density profile plots.
+#'       It is used internally in the `flagR` function for the initial plots of
+#'       the raw sample data. It can also be called on user edited quality flagged
+#'       csv inputs and each iteration will retain the input 'R' value in the plot
+#'       file name.
+#'
+#' @param file A character string. Full file path to raw csv data. If rerun is TRUE
+#'       full file path to quality flagged data required.
+#'
+#' @param rerun Boolean default FALSE. If TRUE will make profile plots for reviewed
+#'       data. See file parameter.
+#'
+#' @param ... Further arguments only used when run internally in `flagR`.
 #'
 #' @return Three individual profile plots, facetted by transect, for salinity,
 #'       temperature and density (UNESCO formula).
@@ -252,10 +262,34 @@ transect_checkR <- function(x){
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom stringr str_detect
-profile_plotR <- function(x, file){
+#'
+#' @export
+#'
+#' @examples
+#' \dontrun{
+#' profile_plotR("./my_raw_sonde_data.csv")
+#' }
+profile_plotR <- function(file, rerun = FALSE, ...){
+
+  fname <- tools::file_path_sans_ext(basename(file))
+  isR <- length(str_split(fname, "_")[[1]])
+
+  # are the inputs correct
+  if(rerun == FALSE & isR > 2){
+    stop("Is provided file correct for initial profile plotting?")
+  } else {
+    if(rerun == TRUE & isR < 3){
+      stop("Is provided file correct for rerun profile plotting?")
+    } else {
+      print("Inputs are all good...")
+    }
+  }
+
+
+  if(rerun == TRUE){x <- readr::read_csv(file)}
 
   tname <- plot_nameR(file = file)
-  fname <- tools::file_path_sans_ext(basename(file))
+
 
   facet_df <- dplyr::tibble(site = as.factor(x[["site"]]),
                             tsect = substr(site, 1, 3)) %>%
@@ -385,7 +419,5 @@ profile_plotR <- function(x, file){
   suppressMessages(ggsave(c_plot, file = paste0("./", fname, "_temperature_profile.png")))
   suppressMessages(ggsave(s_plot, file = paste0("./", fname, "_salinity_profile.png")))
 }
-
-
 
 
