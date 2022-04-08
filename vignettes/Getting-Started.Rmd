@@ -72,7 +72,7 @@ data according to some pre-determined rules. These rules include:
   *   *Sample stability*. The sensors must remain at a depth for a period of time 
 long enough to allow measurements to stabilise. This is determined by allowing 
 enough time for the depth and the Vpos variables to converge. The threshold 
-for convergence is +/- 10%. Quality code is 01000.
+for convergence is +/- 0.2m. Quality code is 01000.
 
 *   *Out of sequence*. Measurements are taken from the river bottom to the surface. 
 If a sample is recorded at a deeper depth than the preceding sample at a site 
@@ -133,3 +133,17 @@ Some examples of `QUAL` code combinations and meanings:
 *   **11000** - Sample stability issue.
 
 *   **10011** - Duplicate record and outside of transect envelope.
+
+## Using the `profile_plotR`
+When the `flagR` function is run, internally it calls on `profile_plotR` to produce 
+the salinity, temperature and density plots. If the user wants to create another 
+iteration of profile plots, for example after removing some bad data on review of 
+the quality flags, use the below as an example.
+```{r, profile_plotR, eval=FALSE}
+# full file path to quality flaggged data
+file <- "./to_location/of_the/quality_flagged_data/20200101_CAV_R1.csv"
+
+# run the profile plot function
+profile_plotR(file, rerun=TRUE)
+```
+ 
