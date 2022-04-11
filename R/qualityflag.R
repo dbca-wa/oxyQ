@@ -412,7 +412,7 @@ profile_plotR <- function(file){
 #' @param x A tibble as exported from either \code{\link{imp_raw_csv}}
 #'       or \code{\link{old_data_updatR}}
 #'
-#' @param file
+#' @param file A character string. Full file path to raw csv data.
 #'
 #' @return Three individual profile plots, facetted by transect, for salinity,
 #'       temperature and density (UNESCO formula).
