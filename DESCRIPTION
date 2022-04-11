@@ -24,7 +24,8 @@ Imports:
     readr,
     sf,
     stringr,
-    tools
+    tools,
+    utils
 Depends: 
     R (>= 2.10)
 Suggests: 

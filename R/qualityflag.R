@@ -556,3 +556,5 @@ plotR <- function(x, file){
   suppressMessages(ggsave(c_plot, filename = paste0("./", fname, "_temperature_profile.png")))
   suppressMessages(ggsave(s_plot, filename = paste0("./", fname, "_salinity_profile.png")))
 }
+
+utils::globalVariables(c("densP", "site", "fac_grp", "y", "cP", "salP", "."))
