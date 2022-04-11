@@ -10,7 +10,7 @@ plotR(x, file)
 \item{x}{A tibble as exported from either \code{\link{imp_raw_csv}}
 or \code{\link{old_data_updatR}}}
 
-\item{file}{}
+\item{file}{A character string. Full file path to raw csv data.}
 }
 \value{
 Three individual profile plots, facetted by transect, for salinity,
