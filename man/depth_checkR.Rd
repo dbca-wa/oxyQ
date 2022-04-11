@@ -11,7 +11,7 @@ depth_checkR(x)
 or \code{\link{old_data_updatR}}}
 }
 \value{
-A tibble where \code{QUAL} variable has 1000 added if > +/-10\% variation.
+A tibble where \code{QUAL} variable has 1000 added if > 0.1m variation.
 }
 \description{
 Checks stability of sample by comparison of depth to vpos measurements on sonde.
