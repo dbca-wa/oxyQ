@@ -142,7 +142,13 @@ old_data_updatR <- function(x){
 plot_nameR <- function(file){
   date <- lubridate::as_date(substr(basename(file), 1, 8))
   loc <- stringr::str_split(tools::file_path_sans_ext(basename(file)), "_")[[1]][2]
-  sname <- paste(date, loc)
+  rev <- stringr::str_split(tools::file_path_sans_ext(basename(file)), "_")[[1]][3]
+  if(is.na(rev)){
+    sname <- paste(date, loc)
+  } else {
+    sname <- paste(date, loc, rev)
+  }
+
   return(sname)
 }
 
