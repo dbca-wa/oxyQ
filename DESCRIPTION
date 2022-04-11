@@ -1,5 +1,5 @@
 Package: oxyQ
-Title: Quality checking sample data for oxygenation plant monitoring.
+Title: Quality checking sample data for oxygenation plant monitoring
 Version: 0.1
 Authors@R: 
     person("Bart", "Huntley", , "Bart.Huntley@DBCA.wa.gov.au", role = c("aut", "cre"),
