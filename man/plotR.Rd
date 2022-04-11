@@ -7,6 +7,9 @@
 plotR(x, file)
 }
 \arguments{
+\item{x}{A tibble as exported from either \code{\link{imp_raw_csv}}
+or \code{\link{old_data_updatR}}}
+
 \item{file}{}
 }
 \value{
