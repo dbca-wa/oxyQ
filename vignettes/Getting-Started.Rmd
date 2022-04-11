@@ -72,7 +72,7 @@ data according to some pre-determined rules. These rules include:
   *   *Sample stability*. The sensors must remain at a depth for a period of time 
 long enough to allow measurements to stabilise. This is determined by allowing 
 enough time for the depth and the Vpos variables to converge. The threshold 
-for convergence is +/- 0.2m. Quality code is 01000.
+for convergence is +/- 0.1m. Quality code is 01000.
 
 *   *Out of sequence*. Measurements are taken from the river bottom to the surface. 
 If a sample is recorded at a deeper depth than the preceding sample at a site 
@@ -126,6 +126,8 @@ information in it's attribute table. This enables the user to visualise where
     site within a transect is offset by an indicated amount so that the traces do 
     not overplot. e.g. 20200101_CAV_temperature_profile.png etc.
     
+**NOTE** All spatial outputs are transformed to GDA2020 MGA50 (EPSG:7850).
+    
 Some examples of `QUAL` code combinations and meanings:
 
 *   **10000** - OK.
@@ -133,6 +135,7 @@ Some examples of `QUAL` code combinations and meanings:
 *   **11000** - Sample stability issue.
 
 *   **10011** - Duplicate record and outside of transect envelope.
+
 
 ## Using the `profile_plotR`
 When the `flagR` function is run, internally it calls on `profile_plotR` to produce 
