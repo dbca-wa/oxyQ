@@ -286,7 +286,7 @@ profile_plotR <- function(file){
                        dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
     dplyr::select(-.data$tsect)
 
-  if(stringr::str_detect(x[["site"]][1], pattern = "c")){
+  if(stringr::str_detect(tolower(x[["site"]][1]), pattern = "c")){
     # caversham
     dat <- x %>%
       dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
@@ -439,7 +439,7 @@ plotR <- function(x, file){
                        dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
     dplyr::select(-.data$tsect)
 
-  if(stringr::str_detect(x[["site"]][1], pattern = "c")){
+  if(stringr::str_detect(tolower(x[["site"]][1]), pattern = "c")){
     # caversham
     dat <- x %>%
       dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
