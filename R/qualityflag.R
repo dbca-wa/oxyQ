@@ -408,7 +408,7 @@ profile_plotR <- function(file){
       dplyr::arrange(.data$site)
     
     # no offset labels
-    lab_df <- dat_noff %>%
+    lab_df_noff <- dat_noff %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
                     fac_grp = factor(substr(toupper(.data$site), 1, 3),
@@ -666,7 +666,7 @@ plotR <- function(x, file){
       dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
       dplyr::arrange(.data$site)
     
-    lab_df <- dat_noff %>%
+    lab_df_noff <- dat_noff %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
                     fac_grp = factor(substr(toupper(.data$site), 1, 3),
