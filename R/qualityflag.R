@@ -36,30 +36,30 @@
 #' flagR("./my_raw_sonde_data.csv")
 #' }
 flagR <- function(file){
-
+  
   x <- imp_raw_csv(file)
-
+  
   x <- old_data_updatR(x)
-
+  
   cat("Performing quality checks...\n")
   x <- depth_checkR(x)
-
+  
   x <- site_checkR(x)
-
+  
   x <- transect_checkR(x)
-
+  
   plotR(x, file)
-
+  
   stub <- basename(file) %>%
     gsub(pattern = ".csv", replacement = "_R1.csv", file)
-
+  
   csv_fp <- paste0("./", stub)
   shp_fp <- gsub(pattern = ".csv", replacement = ".shp", stub)
-
+  
   # write csv R version
   x %>%
     readr::write_csv(file = csv_fp)
-
+  
   # write shape file
   x %>%
     dplyr::mutate(time = as.character(.data$time)) %>%
@@ -148,7 +148,7 @@ plot_nameR <- function(file){
   } else {
     sname <- paste(date, loc, rev)
   }
-
+  
   return(sname)
 }
 
@@ -164,9 +164,9 @@ depth_checkR <- function(x){
   out <- x %>%
     dplyr::mutate(dif = round((.data$DEPTH_m - .data$VPOS_m), 2),
                   QUAL = case_when(
-                    abs(.data$dif) >= 0.1  ~ QUAL + 1000,
+                    abs(dif) >= 0.1  ~ QUAL + 1000,
                     TRUE ~ QUAL)) %>%
-    dplyr::select(-.data$dif)
+    dplyr::select(-dif)
   return(out)
 }
 
@@ -184,7 +184,7 @@ depth_checkR <- function(x){
 site_checkR <- function(x){
   out <- dplyr::tibble()
   sites_to_do <- unique(x[["site"]])
-
+  
   for(i in seq_along(sites_to_do)){
     s = sites_to_do[i]
     d <- x %>% dplyr::filter(.data$site == s) %>% dplyr::pull(.data$DEPTH_m)
@@ -193,13 +193,13 @@ site_checkR <- function(x){
       dplyr::filter(.data$site == s) %>%
       dplyr::mutate(dd = diff(d),
                     dup = abs(-.data$DEPTH_m - lead(-.data$DEPTH_m)),
-                    QUAL = ifelse(.data$dd > 0, .data$QUAL + 100, .data$QUAL),
+                    QUAL = ifelse(dd > 0, .data$QUAL + 100, .data$QUAL),
                     QUAL = case_when(
-                      .data$dup < 0.1 ~ .data$QUAL + 10,
-                      is.na(.data$dup) ~ .data$QUAL,
+                      dup < 0.1 ~ .data$QUAL + 10,
+                      is.na(dup) ~ .data$QUAL,
                       TRUE ~ .data$QUAL)) %>%
-      dplyr::select(-.data$dd, -.data$dup)
-
+      dplyr::select(-dd, -dup)
+    
     out <- dplyr::bind_rows(out, odf)
   }
   return(out)
@@ -221,12 +221,12 @@ site_checkR <- function(x){
 transect_checkR <- function(x){
   # turn csv to shp
   x_shp <- sf::st_as_sf(x, coords = c("easting_m", "northing_m"), crs = 7850)
-
+  
   # find outside extents and label tsects
   tcheck <- x_shp %>%
     dplyr::mutate(in_ext = lengths(st_within(x_shp, tpolys))) %>%
     sf::st_join(tpolys, join = st_within) %>%
-    dplyr::select(-.data$id, -.data$grp, -.data$buf) %>%
+    dplyr::select(-id, -grp, -buf) %>%
     dplyr::mutate(QUAL = case_when(
       is.na(.data$tsect) ~ .data$QUAL + 1,
       TRUE ~ .data$QUAL)) %>%
@@ -238,9 +238,9 @@ transect_checkR <- function(x){
                   easting_m = sf::st_coordinates(.)[,1],
                   northing_m = sf::st_coordinates(.)[,2]) %>%
     sf::st_set_geometry(NULL) %>%
-    dplyr::select(-.data$tsamp, -.data$tsect, -.data$in_ext) %>%
+    dplyr::select(-tsamp, -tsect, -in_ext) %>%
     dplyr::relocate(any_of(c("QUAL", "rid")), .after = last_col())
-
+  
   return(tcheck)
 }
 
@@ -268,28 +268,28 @@ transect_checkR <- function(x){
 #' profile_plotR("./my_raw_sonde_data.csv")
 #' }
 profile_plotR <- function(file){
-
+  
   x <- readr::read_csv(file, show_col_types = FALSE)
-
+  
   tname <- plot_nameR(file = file)
   fname <- tools::file_path_sans_ext(basename(file))
-
-
+  
+  
   facet_df <- dplyr::tibble(site = as.factor(x[["site"]]),
                             tsect = substr(.data$site, 1, 3)) %>%
     unique() %>%
     dplyr::arrange(.data$site)
-
+  
   grp_facet <- facet_df %>%
     dplyr::left_join(unique(facet_df) %>%
                        dplyr::group_by(.data$tsect) %>%
                        dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
     dplyr::select(-.data$tsect)
-
+  
   if(stringr::str_detect(tolower(x[["site"]][1]), pattern = "c")){
     # caversham
     dat <- x %>%
-      dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
       dplyr::mutate(site = as.factor(.data$site)) %>%
       dplyr::arrange(.data$site) %>%
       dplyr::mutate(p = 1 + (.data$DEPTH_m * 0.1),
@@ -307,12 +307,30 @@ profile_plotR <- function(file){
                                      levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
                                                 "CU2", "CU3"))) %>%
       dplyr::arrange(.data$site, .data$depth)
-
+    
+    # no offset data
+    dat_noff <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(.data$site)) %>%
+      dplyr::arrange(.data$site) %>%
+      dplyr::mutate(p = 1 + (.data$DEPTH_m * 0.1),
+                    depth = -.data$DEPTH_m,
+                    dens = marelac::sw_dens(S = .data$SAL_psu, t = .data$T_degC, p = .data$p,
+                                            method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(densP = round(.data$dens, 2),
+                    cP = round(.data$T_degC, 2),
+                    salP = round(.data$SAL_psu, 2),
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3"))) %>%
+      dplyr::arrange(.data$site, .data$depth)
+    
     depth <- c(0, dat[["DEPTH_m"]])
-
+    
     # find index of deepest sites
     ind <- c(0, which(diff(depth)>0))
-
+    
     lab_df <- dat %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
@@ -320,12 +338,23 @@ profile_plotR <- function(file){
                                      levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
                                                 "CU2", "CU3")),
                     site = toupper(.data$site)) %>%
-      dplyr::select(.data$site, .data$y, .data$densP, .data$cP, .data$salP, .data$fac_grp) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(.data$site)
+    
+    # no offset labels
+    lab_df_noff <- dat_noff %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = .data$depth - 0.1,
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3")),
+                    site = toupper(.data$site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
       dplyr::arrange(.data$site)
   } else {
     # guildford
     dat <- x %>%
-      dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
       dplyr::mutate(site = as.factor(.data$site)) %>%
       dplyr::arrange(.data$site) %>%
       dplyr:: mutate(p = 1 + (.data$DEPTH_m * 0.1),
@@ -343,12 +372,31 @@ profile_plotR <- function(file){
                                      levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
                                                 "GU2", "GU3"))) %>%
       dplyr::arrange(.data$site, .data$depth)
-
+    
+    # no offset data
+    dat_noff <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(.data$site)) %>%
+      dplyr::arrange(.data$site) %>%
+      dplyr:: mutate(p = 1 + (.data$DEPTH_m * 0.1),
+                     depth = -.data$DEPTH_m,
+                     dens = marelac::sw_dens(S = .data$SAL_psu, t = .data$T_degC, p = .data$p,
+                                             method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(densP = round(.data$dens, 2),
+                    cP = round(.data$T_degC, 2),
+                    salP = round(.data$SAL_psu, 2),
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3"))) %>%
+      dplyr::arrange(.data$site, .data$depth)
+    
+    
     depth <- c(0, dat[["DEPTH_m"]])
-
+    
     # find index of deepest sites
     ind <- c(0, which(diff(depth)>0))
-
+    
     lab_df <- dat %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
@@ -356,14 +404,25 @@ profile_plotR <- function(file){
                                      levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
                                                 "GU2", "GU3")),
                     site = toupper(.data$site)) %>%
-      dplyr::select(.data$site, .data$y, .data$densP, .data$cP, .data$salP, .data$fac_grp) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(.data$site)
+    
+    # no offset labels
+    lab_df <- dat_noff %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = .data$depth - 0.1,
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3")),
+                    site = toupper(.data$site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
       dplyr::arrange(.data$site)
   }
-
+  
   d_plot <- ggplot(dat, aes(x = densP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = densP, y = y)) +
     labs(title = tname,
          subtitle = expression(Offset~"0.3"*kg*"/"*m^3),
@@ -372,11 +431,25 @@ profile_plotR <- function(file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  # no offset plot
+  d_noff <- ggplot(dat_noff, aes(x = densP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = densP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = expression(Density~"("*kg*"/"*m^3*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
   c_plot <- ggplot(dat, aes(x = cP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = cP, y = y)) +
     labs(title = tname,
          subtitle = expression(Offset~"0.2"*degree*C),
@@ -385,11 +458,25 @@ profile_plotR <- function(file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  # no offset plot
+  c_noff <- ggplot(dat_noff, aes(x = cP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = cP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = expression(Temperature~"("*degree*C*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
   s_plot <- ggplot(dat, aes(x = salP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = salP, y = y)) +
     labs(title = tname,
          subtitle = "Offset 0.3ppt",
@@ -398,10 +485,27 @@ profile_plotR <- function(file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  # no offset plot
+  s_noff <- ggplot(dat_noff, aes(x = salP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = salP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = "Salinity (ppt)") +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
   suppressMessages(ggsave(d_plot, filename = paste0("./", fname, "_density_profile.png")))
+  suppressMessages(ggsave(d_noff, filename = paste0("./", fname, "_density_profile_no_offset.png")))
   suppressMessages(ggsave(c_plot, filename = paste0("./", fname, "_temperature_profile.png")))
+  suppressMessages(ggsave(c_noff, filename = paste0("./", fname, "_temperature_profile_no_offset.png")))
   suppressMessages(ggsave(s_plot, filename = paste0("./", fname, "_salinity_profile.png")))
+  suppressMessages(ggsave(s_noff, filename = paste0("./", fname, "_salinity_profile_no_offset.png")))
 }
 
 
@@ -422,27 +526,28 @@ profile_plotR <- function(file){
 #' @import dplyr
 #' @import ggplot2
 #' @importFrom stringr str_detect
+#' @importFrom ggh4x facet_grid2
 plotR <- function(x, file){
-
+  
   tname <- plot_nameR(file = file)
   fname <- tools::file_path_sans_ext(basename(file))
-
-
+  
+  
   facet_df <- dplyr::tibble(site = as.factor(x[["site"]]),
                             tsect = substr(.data$site, 1, 3)) %>%
     unique() %>%
     dplyr::arrange(.data$site)
-
+  
   grp_facet <- facet_df %>%
     dplyr::left_join(unique(facet_df) %>%
                        dplyr::group_by(.data$tsect) %>%
                        dplyr::mutate(off = 0:(n()-1)), by = c("site", "tsect")) %>%
-    dplyr::select(-.data$tsect)
-
+    dplyr::select(-tsect)
+  
   if(stringr::str_detect(tolower(x[["site"]][1]), pattern = "c")){
     # caversham
     dat <- x %>%
-      dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
       dplyr::mutate(site = as.factor(.data$site)) %>%
       dplyr::arrange(.data$site) %>%
       dplyr::mutate(p = 1 + (.data$DEPTH_m * 0.1),
@@ -460,12 +565,30 @@ plotR <- function(x, file){
                                      levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
                                                 "CU2", "CU3"))) %>%
       dplyr::arrange(.data$site, .data$depth)
-
+    
+    # no offset data
+    dat_noff <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(.data$site)) %>%
+      dplyr::arrange(.data$site) %>%
+      dplyr::mutate(p = 1 + (.data$DEPTH_m * 0.1),
+                    depth = -.data$DEPTH_m,
+                    dens = marelac::sw_dens(S = .data$SAL_psu, t = .data$T_degC, p = .data$p,
+                                            method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(densP = round(.data$dens, 2),
+                    cP = round(.data$T_degC, 2),
+                    salP = round(.data$SAL_psu, 2),
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3"))) %>%
+      dplyr::arrange(.data$site, .data$depth)
+    
     depth <- c(0, dat[["DEPTH_m"]])
-
+    
     # find index of deepest sites
     ind <- c(0, which(diff(depth)>0))
-
+    
     lab_df <- dat %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
@@ -473,12 +596,23 @@ plotR <- function(x, file){
                                      levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
                                                 "CU2", "CU3")),
                     site = toupper(.data$site)) %>%
-      dplyr::select(.data$site, .data$y, .data$densP, .data$cP, .data$salP, .data$fac_grp) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(.data$site)
+    
+    # no offset labels
+    lab_df_noff <- dat_noff %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = .data$depth - 0.1,
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("CD3", "CD2", "CD1", "CS0", "CU1",
+                                                "CU2", "CU3")),
+                    site = toupper(.data$site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
       dplyr::arrange(.data$site)
   } else {
     # guildford
     dat <- x %>%
-      dplyr::select(.data$date, .data$site, .data$T_degC, .data$DEPTH_m, .data$SAL_psu) %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
       dplyr::mutate(site = as.factor(.data$site)) %>%
       dplyr::arrange(.data$site) %>%
       dplyr:: mutate(p = 1 + (.data$DEPTH_m * 0.1),
@@ -496,12 +630,32 @@ plotR <- function(x, file){
                                      levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
                                                 "GU2", "GU3"))) %>%
       dplyr::arrange(.data$site, .data$depth)
-
+    
+    # no offset data
+    dat_noff <- x %>%
+      dplyr::select(date, site, T_degC, DEPTH_m, SAL_psu) %>%
+      dplyr::mutate(site = as.factor(.data$site)) %>%
+      dplyr::arrange(.data$site) %>%
+      dplyr:: mutate(p = 1 + (.data$DEPTH_m * 0.1),
+                     depth = -.data$DEPTH_m,
+                     dens = marelac::sw_dens(S = .data$SAL_psu, t = .data$T_degC, p = .data$p,
+                                             method = "UNESCO")) %>%
+      dplyr::left_join(grp_facet, by = "site") %>%
+      dplyr::mutate(densP = round(.data$dens, 2),
+                    cP = round(.data$T_degC, 2),
+                    salP = round(.data$SAL_psu, 2),
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3"))) %>%
+      dplyr::arrange(.data$site, .data$depth)
+    
+    
+    
     depth <- c(0, dat[["DEPTH_m"]])
-
+    
     # find index of deepest sites
     ind <- c(0, which(diff(depth)>0))
-
+    
     lab_df <- dat %>%
       dplyr::slice(ind) %>%
       dplyr::mutate(y = .data$depth - 0.1,
@@ -509,14 +663,24 @@ plotR <- function(x, file){
                                      levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
                                                 "GU2", "GU3")),
                     site = toupper(.data$site)) %>%
-      dplyr::select(.data$site, .data$y, .data$densP, .data$cP, .data$salP, .data$fac_grp) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
+      dplyr::arrange(.data$site)
+    
+    lab_df <- dat_noff %>%
+      dplyr::slice(ind) %>%
+      dplyr::mutate(y = .data$depth - 0.1,
+                    fac_grp = factor(substr(toupper(.data$site), 1, 3),
+                                     levels = c("GD3", "GD2", "GD1", "GS0", "GU1",
+                                                "GU2", "GU3")),
+                    site = toupper(.data$site)) %>%
+      dplyr::select(site, y, densP, cP, salP, fac_grp) %>%
       dplyr::arrange(.data$site)
   }
-
+  
   d_plot <- ggplot(dat, aes(x = densP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = densP, y = y)) +
     labs(title = tname,
          subtitle = expression(Offset~"0.3"*kg*"/"*m^3),
@@ -525,11 +689,27 @@ plotR <- function(x, file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  
+  # no offset plot
+  d_noff <- ggplot(dat_noff, aes(x = densP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = densP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = expression(Density~"("*kg*"/"*m^3*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
+  
   c_plot <- ggplot(dat, aes(x = cP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = cP, y = y)) +
     labs(title = tname,
          subtitle = expression(Offset~"0.2"*degree*C),
@@ -538,11 +718,25 @@ plotR <- function(x, file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  # no offset plot
+  c_noff <- ggplot(dat_noff, aes(x = cP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = cP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = expression(Temperature~"("*degree*C*")")) +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
   s_plot <- ggplot(dat, aes(x = salP, y = depth, colour = site)) +
     geom_path() +
     geom_point() +
-    facet_grid(rows = vars(fac_grp)) +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
     geom_text(data = lab_df, aes(label = site, x = salP, y = y)) +
     labs(title = tname,
          subtitle = "Offset 0.3ppt",
@@ -551,10 +745,27 @@ plotR <- function(x, file){
     lims(y = c(-5, 0)) +
     theme_bw() +
     theme(legend.position="none")
-
+  
+  # no offset plot
+  s_noff <- ggplot(dat_noff, aes(x = salP, y = depth, colour = site)) +
+    geom_path() +
+    geom_point() +
+    ggh4x::facet_grid2(rows = vars(fac_grp), scales = "free_x", independent = "x") +
+    geom_text(data = lab_df_noff, aes(label = site, x = salP, y = y)) +
+    labs(title = tname,
+         subtitle = "No offset",
+         y = "Depth (m)",
+         x = "Salinity (ppt)") +
+    lims(y = c(-5, 0)) +
+    theme_bw() +
+    theme(legend.position="none")
+  
   suppressMessages(ggsave(d_plot, filename = paste0("./", fname, "_density_profile.png")))
+  suppressMessages(ggsave(d_noff, filename = paste0("./", fname, "_density_profile_no_offset.png")))
   suppressMessages(ggsave(c_plot, filename = paste0("./", fname, "_temperature_profile.png")))
+  suppressMessages(ggsave(c_noff, filename = paste0("./", fname, "_temperature_profile_no_offset.png")))
   suppressMessages(ggsave(s_plot, filename = paste0("./", fname, "_salinity_profile.png")))
+  suppressMessages(ggsave(s_noff, filename = paste0("./", fname, "_salinity_profile_no_offset.png")))
 }
 
 utils::globalVariables(c("densP", "site", "fac_grp", "y", "cP", "salP", "."))
