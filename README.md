@@ -33,6 +33,6 @@ devtools::install_github("dbca-wa/oxyQ", build_vignettes = TRUE)
 Be sure to check out the package vignette for how to get started.
 
 ``` r
-utils::browseVignettes(package = "oxyQ)
+utils::browseVignettes(package = "oxyQ")
 ```
 
