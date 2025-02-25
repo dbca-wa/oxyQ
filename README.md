@@ -5,9 +5,10 @@
 
 <!-- badges: start -->
 
-[![Project Status: Active â€“ The project has reached a stable, usable
-state and is being actively
-developed.](https://www.repostatus.org/badges/latest/active.svg)](https://www.repostatus.org/#active)
+[![Project Status: Unsupported – The project has reached a stable,
+usable state but the author(s) have ceased all work on it. A new
+maintainer may be
+desired.](https://www.repostatus.org/badges/latest/unsupported.svg)](https://www.repostatus.org/#unsupported)
 [![GitHub
 issues](https://img.shields.io/github/issues/dbca-wa/oxyQ.svg?style=popout)](https://github.com/dbca-wa/oxyQ/issues/)
 [![Last-changedate](https://img.shields.io/github/last-commit/dbca-wa/oxyQ.svg)](https://github.com/dbca-wa/oxyQ/commits/master)
@@ -33,6 +34,5 @@ devtools::install_github("dbca-wa/oxyQ", build_vignettes = TRUE)
 Be sure to check out the package vignette for how to get started.
 
 ``` r
-utils::browseVignettes(package = "oxyQ")
+utils::browseVignettes(package = "oxyQ)
 ```
-
